@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BizAI — Diagnostic Entreprise</title>
+<style>
+  :root {
+    --primary: #6C63FF;
+    --primary-dark: #5A52D5;
+    --secondary: #00D4AA;
+    --dark: #0F1117;
+    --card: #1A1D27;
+    --card2: #222636;
+    --text: #E8EAF6;
+    --muted: #9096B4;
+    --danger: #FF5370;
+    --warn: #FFB74D;
+    --success: #69F0AE;
+    --border: #2E3250;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--dark);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, #1A1D27 0%, #0F1117 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .logo { display: flex; align-items: center; gap: .6rem; font-size: 1.3rem; font-weight: 700; }
+  .logo-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+  }
+  .badge {
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    color: #fff; font-size: .65rem; font-weight: 700;
+    padding: 2px 8px; border-radius: 20px; letter-spacing: .5px;
+  }
+  .header-actions { display: flex; gap: .75rem; align-items: center; }
+  .btn-ghost {
+    background: none; border: 1px solid var(--border);
+    color: var(--muted); padding: 6px 14px; border-radius: 8px;
+    cursor: pointer; font-size: .85rem; transition: all .2s;
+  }
+  .btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
+
+  /* ── LAYOUT ── */
+  .container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+  /* ── STEPS NAV ── */
+  .steps-nav {
+    display: flex; gap: 0; margin-bottom: 2.5rem;
+    background: var(--card); border-radius: 14px;
+    border: 1px solid var(--border); overflow: hidden;
+  }
+  .step-item {
+    flex: 1; padding: 14px 10px; text-align: center; cursor: pointer;
+    font-size: .8rem; font-weight: 600; color: var(--muted);
+    border-right: 1px solid var(--border); transition: all .25s;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
+  .step-item:last-child { border-right: none; }
+  .step-item.active { background: var(--card2); color: var(--primary); }
+  .step-item.done { color: var(--secondary); }
+  .step-item .step-num {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 2px solid currentColor;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .7rem;
+  }
+  .step-item.done .step-num { background: var(--secondary); border-color: var(--secondary); color: #000; }
+  .step-item.active .step-num { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+  /* ── SECTION CARD ── */
+  .section { display: none; }
+  .section.active { display: block; }
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem;
+  }
+  .card-title {
+    font-size: 1.1rem; font-weight: 700; margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: .6rem;
+  }
+  .card-title .icon { font-size: 1.3rem; }
+
+  /* ── FORM GRID ── */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+  .form-grid.single { grid-template-columns: 1fr; }
+  .form-grid.triple { grid-template-columns: 1fr 1fr 1fr; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: .82rem; color: var(--muted); font-weight: 600; }
+  .field input, .field select, .field textarea {
+    background: var(--card2); border: 1px solid var(--border);
+    color: var(--text); padding: 10px 14px; border-radius: 10px;
+    font-size: .9rem; outline: none; transition: border-color .2s;
+    font-family: inherit;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    border-color: var(--primary);
+  }
+  .field textarea { resize: vertical; min-height: 80px; }
+  .field input[type="range"] {
+    padding: 4px 0; background: none; border: none;
+    accent-color: var(--primary); cursor: pointer;
+  }
+  .range-label { display: flex; justify-content: space-between; font-size: .75rem; color: var(--muted); margin-top: 2px; }
+
+  /* ── TAGS ── */
+  .tags-input-wrap {
+    background: var(--card2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 8px; display: flex; flex-wrap: wrap; gap: 6px;
+    min-height: 44px; cursor: text;
+  }
+  .tags-input-wrap:focus-within { border-color: var(--primary); }
+  .tag {
+    background: rgba(108,99,255,.25); color: var(--primary);
+    border-radius: 20px; padding: 3px 10px; font-size: .78rem;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .tag .tag-del { cursor: pointer; opacity: .7; }
+  .tag .tag-del:hover { opacity: 1; }
+  .tags-input-wrap input {
+    background: none; border: none; color: var(--text);
+    outline: none; font-size: .88rem; min-width: 120px; flex: 1;
+    padding: 2px 4px;
+  }
+
+  /* ── CHECKBOX GRID ── */
+  .check-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: .6rem; }
+  .check-item {
+    background: var(--card2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 14px; cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+    font-size: .85rem; transition: all .2s; user-select: none;
+  }
+  .check-item:hover { border-color: var(--primary); }
+  .check-item.selected { border-color: var(--primary); background: rgba(108,99,255,.15); color: var(--primary); }
+  .check-item .chk { width: 16px; height: 16px; border-radius: 4px; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: .65rem; flex-shrink: 0; }
+  .check-item.selected .chk { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+  /* ── BOTTOM NAV ── */
+  .nav-buttons {
+    display: flex; justify-content: space-between; align-items: center; margin-top: 2rem;
+  }
+  .btn {
+    padding: 12px 28px; border-radius: 10px; border: none;
+    font-size: .9rem; font-weight: 700; cursor: pointer; transition: all .2s;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary), #9C56FF);
+    color: #fff; box-shadow: 0 4px 20px rgba(108,99,255,.35);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(108,99,255,.5); }
+  .btn-secondary { background: var(--card2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--primary); color: var(--primary); }
+  .btn-analyze {
+    background: linear-gradient(135deg, var(--secondary), #00A884);
+    color: #000; font-size: 1rem; padding: 14px 36px;
+    box-shadow: 0 4px 20px rgba(0,212,170,.3);
+  }
+  .btn-analyze:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,212,170,.5); }
+
+  /* ── PROGRESS BAR ── */
+  .progress-bar {
+    height: 4px; background: var(--border); border-radius: 2px;
+    margin-bottom: 2rem; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; border-radius: 2px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    transition: width .4s ease;
+  }
+
+  /* ── LOADING OVERLAY ── */
+  #loadingOverlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(15,17,23,.92); z-index: 999;
+    flex-direction: column; align-items: center; justify-content: center; gap: 1.5rem;
+  }
+  #loadingOverlay.show { display: flex; }
+  .spinner {
+    width: 60px; height: 60px; border-radius: 50%;
+    border: 4px solid var(--border);
+    border-top-color: var(--primary);
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 1.1rem; color: var(--muted); }
+  .loading-steps { display: flex; flex-direction: column; gap: 6px; margin-top: .5rem; }
+  .load-step { font-size: .82rem; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+  .load-step.done-s { color: var(--secondary); }
+  .load-step.active-s { color: var(--primary); }
+
+  /* ── RAPPORT ── */
+  #reportSection { display: none; }
+  #reportSection.show { display: block; }
+  .report-header {
+    text-align: center; margin-bottom: 2.5rem; padding: 2.5rem;
+    background: linear-gradient(135deg, rgba(108,99,255,.12), rgba(0,212,170,.08));
+    border: 1px solid var(--border); border-radius: 20px;
+  }
+  .report-header h1 { font-size: 2rem; font-weight: 800; margin-bottom: .5rem; }
+  .report-header p { color: var(--muted); font-size: .95rem; }
+  .score-ring {
+    width: 120px; height: 120px; margin: 1.5rem auto;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 2rem; font-weight: 900; flex-direction: column;
+    position: relative;
+  }
+  .score-label { font-size: .7rem; font-weight: 600; color: var(--muted); }
+
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+  .kpi-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 1.2rem; text-align: center;
+  }
+  .kpi-card .kpi-val { font-size: 1.6rem; font-weight: 800; margin-bottom: 4px; }
+  .kpi-card .kpi-lbl { font-size: .75rem; color: var(--muted); }
+
+  .diag-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  .diag-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 1.5rem;
+  }
+  .diag-title { font-size: .9rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: .5rem; }
+  .rec-item {
+    padding: 10px 14px; border-radius: 10px; margin-bottom: .6rem;
+    font-size: .85rem; display: flex; align-items: flex-start; gap: 8px;
+    line-height: 1.5;
+  }
+  .rec-item.critical { background: rgba(255,83,112,.1); border-left: 3px solid var(--danger); }
+  .rec-item.warning  { background: rgba(255,183,77,.1);  border-left: 3px solid var(--warn); }
+  .rec-item.ok       { background: rgba(105,240,174,.1); border-left: 3px solid var(--success); }
+  .rec-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+
+  .action-plan {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 1.5rem; margin-top: 1.5rem;
+  }
+  .action-title { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; }
+  .action-item {
+    display: flex; gap: 1rem; padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .action-item:last-child { border-bottom: none; }
+  .action-num {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    display: flex; align-items: center; justify-content: center;
+    font-size: .75rem; font-weight: 800; flex-shrink: 0; color: #fff;
+  }
+  .action-content { flex: 1; }
+  .action-name { font-weight: 700; font-size: .88rem; margin-bottom: 3px; }
+  .action-desc { font-size: .8rem; color: var(--muted); line-height: 1.5; }
+  .action-delay {
+    font-size: .72rem; font-weight: 700; padding: 2px 8px;
+    border-radius: 20px; align-self: flex-start; white-space: nowrap;
+  }
+  .delay-urgent { background: rgba(255,83,112,.2); color: var(--danger); }
+  .delay-month  { background: rgba(255,183,77,.2);  color: var(--warn); }
+  .delay-long   { background: rgba(105,240,174,.2); color: var(--success); }
+
+  .ia-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: linear-gradient(135deg, rgba(108,99,255,.25), rgba(0,212,170,.15));
+    border: 1px solid rgba(108,99,255,.4); border-radius: 8px;
+    padding: 4px 10px; font-size: .75rem; font-weight: 700;
+    color: var(--primary); margin-bottom: .5rem;
+  }
+
+  .metric-bar-wrap { margin-bottom: .8rem; }
+  .metric-bar-label { display: flex; justify-content: space-between; font-size: .8rem; margin-bottom: 4px; }
+  .metric-bar { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .metric-bar-fill { height: 100%; border-radius: 4px; transition: width 1s ease; }
+
+  /* pack pricing */
+  .pack-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; margin-top: 1.5rem; }
+  .pack-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 1.5rem; text-align: center;
+    transition: transform .2s;
+  }
+  .pack-card:hover { transform: translateY(-4px); }
+  .pack-card.featured { border-color: var(--primary); background: rgba(108,99,255,.08); }
+  .pack-name { font-size: 1rem; font-weight: 800; margin-bottom: .5rem; }
+  .pack-price { font-size: 2rem; font-weight: 900; margin-bottom: .25rem; }
+  .pack-price span { font-size: .85rem; font-weight: 400; color: var(--muted); }
+  .pack-feat { font-size: .78rem; color: var(--muted); margin: .8rem 0; line-height: 1.8; }
+  .pack-feat strong { color: var(--text); display: block; }
+  .btn-pack {
+    width: 100%; padding: 10px; border-radius: 10px; border: none;
+    font-weight: 700; cursor: pointer; font-size: .85rem;
+    background: var(--border); color: var(--text); transition: all .2s;
+  }
+  .pack-card.featured .btn-pack {
+    background: linear-gradient(135deg, var(--primary), #9C56FF);
+    color: #fff;
+  }
+
+  .print-btn {
+    background: var(--card2); border: 1px solid var(--border);
+    color: var(--text); padding: 10px 20px; border-radius: 10px;
+    cursor: pointer; font-size: .85rem; font-weight: 600;
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  @media (max-width: 768px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .form-grid.triple { grid-template-columns: 1fr 1fr; }
+    .kpi-grid { grid-template-columns: 1fr 1fr; }
+    .diag-grid { grid-template-columns: 1fr; }
+    .pack-grid { grid-template-columns: 1fr; }
+    .steps-nav { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🧠</div>
+    BizAI
+    <span class="badge">IA INTÉGRÉE</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn-ghost" onclick="resetForm()">↺ Réinitialiser</button>
+    <button class="btn-ghost" id="printBtn" style="display:none" onclick="window.print()">🖨 Imprimer</button>
+  </div>
+</header>
+
+<!-- LOADING -->
+<div id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text">Analyse IA en cours…</div>
+  <div class="loading-steps">
+    <div class="load-step" id="ls1">⏳ Lecture des données financières</div>
+    <div class="load-step" id="ls2">⏳ Analyse de la rentabilité</div>
+    <div class="load-step" id="ls3">⏳ Évaluation des risques fournisseurs & clients</div>
+    <div class="load-step" id="ls4">⏳ Scoring réseaux & présence digitale</div>
+    <div class="load-step" id="ls5">⏳ Génération du plan d'action personnalisé</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="container" id="mainApp">
+
+  <!-- PROGRESS -->
+  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:20%"></div></div>
+
+  <!-- STEPS NAV -->
+  <div class="steps-nav">
+    <div class="step-item active" id="nav0" onclick="goStep(0)">
+      <div class="step-num">1</div><span>Entreprise</span>
+    </div>
+    <div class="step-item" id="nav1" onclick="goStep(1)">
+      <div class="step-num">2</div><span>Finances</span>
+    </div>
+    <div class="step-item" id="nav2" onclick="goStep(2)">
+      <div class="step-num">3</div><span>Réseau & Digital</span>
+    </div>
+    <div class="step-item" id="nav3" onclick="goStep(3)">
+      <div class="step-num">4</div><span>Fournisseurs</span>
+    </div>
+    <div class="step-item" id="nav4" onclick="goStep(4)">
+      <div class="step-num">5</div><span>Clients</span>
+    </div>
+  </div>
+
+  <!-- ═══ STEP 0 : Entreprise ═══ -->
+  <div class="section active" id="step0">
+    <div class="card">
+      <div class="card-title"><span class="icon">🏢</span> Informations Générales</div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Nom de l'entreprise *</label>
+          <input type="text" id="companyName" placeholder="Ex : SARL Dupont & Fils">
+        </div>
+        <div class="field">
+          <label>Secteur d'activité *</label>
+          <select id="sector">
+            <option value="">— Choisir —</option>
+            <option>Commerce / Distribution</option>
+            <option>Restauration / Hôtellerie</option>
+            <option>BTP / Construction</option>
+            <option>Services aux entreprises (B2B)</option>
+            <option>Artisanat / Métiers de bouche</option>
+            <option>Transport / Logistique</option>
+            <option>Santé / Bien-être</option>
+            <option>Tech / Numérique</option>
+            <option>Industrie / Fabrication</option>
+            <option>Agriculture / Agroalimentaire</option>
+            <option>Immobilier</option>
+            <option>Autre</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Forme juridique</label>
+          <select id="legal">
+            <option value="">— Choisir —</option>
+            <option>Auto-entrepreneur / EI</option>
+            <option>EURL</option>
+            <option>SARL / SELARL</option>
+            <option>SAS / SASU</option>
+            <option>SA</option>
+            <option>Association</option>
+            <option>Autre</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Nombre de salariés</label>
+          <select id="employees">
+            <option>0 (solo)</option>
+            <option>1–5</option>
+            <option>6–20</option>
+            <option>21–50</option>
+            <option>51–250</option>
+            <option>250+</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Ancienneté (années)</label>
+          <input type="number" id="age" min="0" placeholder="Ex : 5">
+        </div>
+        <div class="field">
+          <label>Zone géographique</label>
+          <select id="zone">
+            <option>Locale (ville/département)</option>
+            <option>Régionale</option>
+            <option>Nationale</option>
+            <option>Internationale</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="icon">🎯</span> Problème Principal Identifié</div>
+      <div class="form-grid single">
+        <div class="field">
+          <label>Décrivez brièvement le défi actuel de votre entreprise</label>
+          <textarea id="mainProblem" placeholder="Ex : Nos ventes stagnent depuis 6 mois, nous perdons des clients au profit d'un concurrent, notre trésorerie est tendue..."></textarea>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Priorité de résolution</label>
+          <select id="priority">
+            <option>🔴 Urgente (moins d'1 mois)</option>
+            <option>🟠 Élevée (1–3 mois)</option>
+            <option>🟡 Modérée (3–6 mois)</option>
+            <option>🟢 Planifiée (6 mois+)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Objectif N+1 (chiffre d'affaires cible)</label>
+          <input type="number" id="targetCA" placeholder="Ex : 500000" step="1000">
+        </div>
+      </div>
+    </div>
+    <div class="nav-buttons">
+      <div></div>
+      <button class="btn btn-primary" onclick="goStep(1)">Suivant →</button>
+    </div>
+  </div>
+
+  <!-- ═══ STEP 1 : Finances ═══ -->
+  <div class="section" id="step1">
+    <div class="card">
+      <div class="card-title"><span class="icon">💰</span> Données Financières (dernière année)</div>
+      <div class="form-grid triple">
+        <div class="field">
+          <label>Chiffre d'affaires (€)</label>
+          <input type="number" id="ca" placeholder="Ex : 350000" step="1000">
+        </div>
+        <div class="field">
+          <label>Résultat net (€)</label>
+          <input type="number" id="net" placeholder="Ex : 18000 ou -5000" step="100">
+        </div>
+        <div class="field">
+          <label>EBE / EBITDA (€)</label>
+          <input type="number" id="ebitda" placeholder="Ex : 45000" step="100">
+        </div>
+        <div class="field">
+          <label>Masse salariale (€)</label>
+          <input type="number" id="payroll" placeholder="Ex : 120000" step="1000">
+        </div>
+        <div class="field">
+          <label>Charges fixes totales (€)</label>
+          <input type="number" id="fixedCosts" placeholder="Ex : 80000" step="1000">
+        </div>
+        <div class="field">
+          <label>Coût des ventes / Achats (€)</label>
+          <input type="number" id="cogs" placeholder="Ex : 150000" step="1000">
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="icon">🏦</span> Trésorerie & Dettes</div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Solde trésorerie actuel (€)</label>
+          <input type="number" id="cash" placeholder="Ex : 25000" step="100">
+        </div>
+        <div class="field">
+          <label>Dettes totales (€)</label>
+          <input type="number" id="debt" placeholder="Ex : 60000" step="1000">
+        </div>
+        <div class="field">
+          <label>Délai moyen de règlement clients (jours)</label>
+          <input type="number" id="dso" placeholder="Ex : 45" min="0" max="365">
+        </div>
+        <div class="field">
+          <label>Délai moyen de paiement fournisseurs (jours)</label>
+          <input type="number" id="dpo" placeholder="Ex : 30" min="0" max="365">
+        </div>
+      </div>
+      <div class="form-grid single" style="margin-top:1rem">
+        <div class="field">
+          <label>Tendance CA (vs année précédente)</label>
+          <input type="range" id="caTrend" min="-50" max="50" value="0" oninput="document.getElementById('caTrendVal').textContent=this.value+'%'">
+          <div class="range-label"><span>−50 %</span><span id="caTrendVal">0 %</span><span>+50 %</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" onclick="goStep(0)">← Retour</button>
+      <button class="btn btn-primary" onclick="goStep(2)">Suivant →</button>
+    </div>
+  </div>
+
+  <!-- ═══ STEP 2 : Réseau & Digital ═══ -->
+  <div class="section" id="step2">
+    <div class="card">
+      <div class="card-title"><span class="icon">🌐</span> Présence Digitale</div>
+      <div class="check-grid" id="digitalChecks">
+        <div class="check-item" data-val="site_web" onclick="toggleCheck(this)">
+          <div class="chk"></div>🌍 Site Web
+        </div>
+        <div class="check-item" data-val="ecommerce" onclick="toggleCheck(this)">
+          <div class="chk"></div>🛒 E-commerce
+        </div>
+        <div class="check-item" data-val="google_maps" onclick="toggleCheck(this)">
+          <div class="chk"></div>📍 Google Maps
+        </div>
+        <div class="check-item" data-val="google_ads" onclick="toggleCheck(this)">
+          <div class="chk"></div>📢 Google Ads
+        </div>
+        <div class="check-item" data-val="seo" onclick="toggleCheck(this)">
+          <div class="chk"></div>🔍 Référencement SEO
+        </div>
+        <div class="check-item" data-val="newsletter" onclick="toggleCheck(this)">
+          <div class="chk"></div>📧 Newsletter
+        </div>
+        <div class="check-item" data-val="crm" onclick="toggleCheck(this)">
+          <div class="chk"></div>📋 CRM / Logiciel client
+        </div>
+        <div class="check-item" data-val="erp" onclick="toggleCheck(this)">
+          <div class="chk"></div>⚙️ ERP / Gestion
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="icon">📱</span> Réseaux Sociaux</div>
+      <div class="check-grid" id="socialChecks">
+        <div class="check-item" data-val="linkedin" onclick="toggleCheck(this)">
+          <div class="chk"></div>💼 LinkedIn
+        </div>
+        <div class="check-item" data-val="instagram" onclick="toggleCheck(this)">
+          <div class="chk"></div>📸 Instagram
+        </div>
+        <div class="check-item" data-val="facebook" onclick="toggleCheck(this)">
+          <div class="chk"></div>👥 Facebook
+        </div>
+        <div class="check-item" data-val="tiktok" onclick="toggleCheck(this)">
+          <div class="chk"></div>🎵 TikTok
+        </div>
+        <div class="check-item" data-val="youtube" onclick="toggleCheck(this)">
+          <div class="chk"></div>▶️ YouTube
+        </div>
+        <div class="check-item" data-val="twitter" onclick="toggleCheck(this)">
+          <div class="chk"></div>🐦 X / Twitter
+        </div>
+      </div>
+      <div class="form-grid" style="margin-top:1rem">
+        <div class="field">
+          <label>Budget marketing mensuel (€)</label>
+          <input type="number" id="marketingBudget" placeholder="Ex : 1500" step="50">
+        </div>
+        <div class="field">
+          <label>Fréquence de publication</label>
+          <select id="pubFreq">
+            <option value="none">Jamais / Irrégulier</option>
+            <option value="monthly">Mensuelle</option>
+            <option value="weekly">Hebdomadaire</option>
+            <option value="daily">Quotidienne</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="icon">📬</span> Communication Email</div>
+      <div class="form-grid triple">
+        <div class="field">
+          <label>Volume d'emails sortants / mois</label>
+          <input type="number" id="emailVolume" placeholder="Ex : 500">
+        </div>
+        <div class="field">
+          <label>Taux d'ouverture estimé (%)</label>
+          <input type="number" id="openRate" placeholder="Ex : 25" min="0" max="100">
+        </div>
+        <div class="field">
+          <label>Outil email utilisé</label>
+          <select id="emailTool">
+            <option value="none">Aucun / Gmail basique</option>
+            <option value="mailchimp">Mailchimp</option>
+            <option value="brevo">Brevo (ex-Sendinblue)</option>
+            <option value="hubspot">HubSpot</option>
+            <option value="other">Autre plateforme</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" onclick="goStep(1)">← Retour</button>
+      <button class="btn btn-primary" onclick="goStep(3)">Suivant →</button>
+    </div>
+  </div>
+
+  <!-- ═══ STEP 3 : Fournisseurs ═══ -->
+  <div class="section" id="step3">
+    <div class="card">
+      <div class="card-title"><span class="icon">🏭</span> Gestion des Fournisseurs</div>
+      <div class="form-grid triple">
+        <div class="field">
+          <label>Nombre de fournisseurs actifs</label>
+          <input type="number" id="suppCount" placeholder="Ex : 12" min="0">
+        </div>
+        <div class="field">
+          <label>Fournisseur principal (% achats)</label>
+          <input type="number" id="suppConcentration" placeholder="Ex : 60" min="0" max="100">
+        </div>
+        <div class="field">
+          <label>Délai de livraison moyen (jours)</label>
+          <input type="number" id="suppDelay" placeholder="Ex : 7" min="0">
+        </div>
+      </div>
+      <div class="form-grid" style="margin-top:1rem">
+        <div class="field">
+          <label>Taux d'incidents / litiges (%)</label>
+          <input type="number" id="suppIncidents" placeholder="Ex : 5" min="0" max="100">
+        </div>
+        <div class="field">
+          <label>Politique de négociation tarifaire</label>
+          <select id="suppNegotiation">
+            <option value="none">Aucune négociation</option>
+            <option value="occasionally">Occasionnelle</option>
+            <option value="annual">Annuelle</option>
+            <option value="continuous">Continue / Benchmark régulier</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="icon">⚡</span> Risques Fournisseurs</div>
+      <div class="check-grid" id="suppRiskChecks">
+        <div class="check-item" data-val="single_source" onclick="toggleCheck(this)">
+          <div class="chk"></div>⚠️ Source unique (mono-fournisseur)
+        </div>
+        <div class="check-item" data-val="international" onclick="toggleCheck(this)">
+          <div class="chk"></div>🌍 Fournisseurs hors-UE
+        </div>
+        <div class="check-item" data-val="no_contract" onclick="toggleCheck(this)">
+          <div class="chk"></div>📄 Pas de contrat formalisé
+        </div>
+        <div class="check-item" data-val="price_volatility" onclick="toggleCheck(this)">
+          <div class="chk"></div>📈 Volatilité des prix matières
+        </div>
+        <div class="check-item" data-val="payment_issues" onclick="toggleCheck(this)">
+          <div class="chk"></div>💸 Retards paiements fréquents
+        </div>
+        <div class="check-item" data-val="no_backup" onclick="toggleCheck(this)">
+          <div class="chk"></div>🔒 Pas de fournisseur de secours
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="icon">🔧</span> Noms de vos principaux fournisseurs</div>
+      <div class="field">
+        <label>Ajouter (Entrée pour valider)</label>
+        <div class="tags-input-wrap" id="suppTagsWrap">
+          <input type="text" id="suppTagInput" placeholder="Ex : Rungis, Metro, Amazon Business…" onkeydown="addTag(event,'supplierTags','suppTagInput','suppTagsWrap')">
+        </div>
+      </div>
+    </div>
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" onclick="goStep(2)">← Retour</button>
+      <button class="btn btn-primary" onclick="goStep(4)">Suivant →</button>
+    </div>
+  </div>
+
+  <!-- ═══ STEP 4 : Clients ═══ -->
+  <div class="section" id="step4">
+    <div class="card">
+      <div class="card-title"><span class="icon">👥</span> Portefeuille Clients</div>
+      <div class="form-grid triple">
+        <div class="field">
+          <label>Nombre de clients actifs</label>
+          <input type="number" id="clientCount" placeholder="Ex : 80" min="0">
+        </div>
+        <div class="field">
+          <label>Client principal (% du CA)</label>
+          <input type="number" id="clientConcentration" placeholder="Ex : 35" min="0" max="100">
+        </div>
+        <div class="field">
+          <label>Panier moyen (€)</label>
+          <input type="number" id="avgBasket" placeholder="Ex : 850" step="10">
+        </div>
+        <div class="field">
+          <label>Taux de rétention (%)</label>
+          <input type="number" id="retention" placeholder="Ex : 75" min="0" max="100">
+        </div>
+        <div class="field">
+          <label>Taux de réclamations (%)</label>
+          <input type="number" id="complaints" placeholder="Ex : 3" min="0" max="100">
+        </div>
+        <div class="field">
+          <label>NPS / Satisfaction (0–10)</label>
+          <input type="number" id="nps" placeholder="Ex : 7" min="0" max="10">
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="icon">🛍</span> Profil & Acquisition Clients</div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Type de clientèle principale</label>
+          <select id="clientType">
+            <option value="b2c">Particuliers (B2C)</option>
+            <option value="b2b">Entreprises (B2B)</option>
+            <option value="mix">Mix B2B + B2C</option>
+            <option value="public">Collectivités / Secteur public</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Principal canal d'acquisition</label>
+          <select id="acquisitionChannel">
+            <option value="bouche">Bouche-à-oreille</option>
+            <option value="web">Site web / SEO</option>
+            <option value="ads">Publicité payante</option>
+            <option value="social">Réseaux sociaux</option>
+            <option value="cold">Prospection directe</option>
+            <option value="partenaires">Partenaires / Prescripteurs</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="icon">📌</span> Principaux clients (optionnel)</div>
+      <div class="field">
+        <label>Ajouter (Entrée pour valider)</label>
+        <div class="tags-input-wrap" id="clientTagsWrap">
+          <input type="text" id="clientTagInput" placeholder="Ex : Carrefour, Mairie de Lyon, Hôtel Ibis…" onkeydown="addTag(event,'clientTags','clientTagInput','clientTagsWrap')">
+        </div>
+      </div>
+    </div>
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" onclick="goStep(3)">← Retour</button>
+      <button class="btn btn-analyze" onclick="runAnalysis()">🧠 Lancer l'Analyse IA</button>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<!-- ════════════════════ RAPPORT ════════════════════ -->
+<div class="container" id="reportSection">
+  <div id="reportContent"></div>
+</div>
+
+<script>
+// ─── STATE ───────────────────────────────────────
+let currentStep = 0;
+const totalSteps = 5;
+const tags = { supplierTags: [], clientTags: [] };
+
+// ─── NAVIGATION ──────────────────────────────────
+function goStep(n) {
+  document.getElementById('step' + currentStep).classList.remove('active');
+  document.getElementById('nav' + currentStep).classList.remove('active');
+  if (currentStep < n) document.getElementById('nav' + currentStep).classList.add('done');
+  currentStep = n;
+  document.getElementById('step' + n).classList.add('active');
+  document.getElementById('nav' + n).classList.add('active');
+  document.getElementById('progressFill').style.width = ((n + 1) / totalSteps * 100) + '%';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ─── CHECKS ──────────────────────────────────────
+function toggleCheck(el) { el.classList.toggle('selected'); el.querySelector('.chk').textContent = el.classList.contains('selected') ? '✓' : ''; }
+function getChecked(containerId) {
+  return [...document.querySelectorAll('#' + containerId + ' .check-item.selected')].map(e => e.dataset.val);
+}
+
+// ─── TAGS ────────────────────────────────────────
+function addTag(e, key, inputId, wrapId) {
+  if (e.key !== 'Enter') return;
+  const val = document.getElementById(inputId).value.trim();
+  if (!val) return;
+  tags[key].push(val);
+  document.getElementById(inputId).value = '';
+  renderTags(key, wrapId, inputId);
+}
+function removeTag(key, idx, wrapId, inputId) {
+  tags[key].splice(idx, 1);
+  renderTags(key, wrapId, inputId);
+}
+function renderTags(key, wrapId, inputId) {
+  const wrap = document.getElementById(wrapId);
+  const input = document.getElementById(inputId);
+  wrap.innerHTML = '';
+  tags[key].forEach((t, i) => {
+    const tag = document.createElement('div');
+    tag.className = 'tag';
+    tag.innerHTML = t + ' <span class="tag-del" onclick="removeTag(\'' + key + '\',' + i + ',\'' + wrapId + '\',\'' + inputId + '\')">×</span>';
+    wrap.appendChild(tag);
+  });
+  wrap.appendChild(input);
+  input.focus();
+}
+
+// ─── RESET ───────────────────────────────────────
+function resetForm() {
+  if (!confirm('Réinitialiser tout le formulaire ?')) return;
+  document.querySelectorAll('input, select, textarea').forEach(el => { if (el.type === 'range') el.value = 0; else el.value = ''; });
+  document.querySelectorAll('.check-item').forEach(el => { el.classList.remove('selected'); el.querySelector('.chk').textContent = ''; });
+  tags.supplierTags = []; tags.clientTags = [];
+  renderTags('supplierTags','suppTagsWrap','suppTagInput');
+  renderTags('clientTags','clientTagsWrap','clientTagInput');
+  document.getElementById('reportSection').classList.remove('show');
+  document.getElementById('mainApp').style.display = '';
+  document.getElementById('printBtn').style.display = 'none';
+  document.getElementById('caTrendVal').textContent = '0%';
+  goStep(0);
+}
+
+// ─── ANALYSE IA ──────────────────────────────────
+function v(id) { return parseFloat(document.getElementById(id).value) || 0; }
+function s(id) { return (document.getElementById(id).value || '').trim(); }
+
+function runAnalysis() {
+  const overlay = document.getElementById('loadingOverlay');
+  overlay.classList.add('show');
+  const steps = ['ls1','ls2','ls3','ls4','ls5'];
+  let i = 0;
+  const tick = setInterval(() => {
+    if (i > 0) { document.getElementById(steps[i-1]).classList.remove('active-s'); document.getElementById(steps[i-1]).classList.add('done-s'); document.getElementById(steps[i-1]).textContent = '✅ ' + document.getElementById(steps[i-1]).textContent.slice(2); }
+    if (i < steps.length) { document.getElementById(steps[i]).classList.add('active-s'); document.getElementById(steps[i]).textContent = '⚡ ' + document.getElementById(steps[i]).textContent.slice(2); i++; }
+    else { clearInterval(tick); setTimeout(() => { overlay.classList.remove('show'); buildReport(); }, 600); }
+  }, 700);
+}
+
+// ─── BUILD REPORT ────────────────────────────────
+function buildReport() {
+  // Collect data
+  const ca = v('ca'), net = v('net'), ebitda = v('ebitda'), payroll = v('payroll'),
+        fixedCosts = v('fixedCosts'), cogs = v('cogs'), cash = v('cash'), debt = v('debt'),
+        dso = v('dso'), dpo = v('dpo'), caTrend = v('caTrend'),
+        suppConc = v('suppConcentration'), clientConc = v('clientConcentration'),
+        retention = v('retention'), nps = v('nps'), complaints = v('complaints'),
+        suppIncidents = v('suppIncidents');
+
+  const digital = getChecked('digitalChecks');
+  const social  = getChecked('socialChecks');
+  const suppRisks = getChecked('suppRiskChecks');
+
+  const company = s('companyName') || 'Votre entreprise';
+  const sector  = s('sector')  || 'Non renseigné';
+  const pubFreq = s('pubFreq');
+  const emailTool = s('emailTool');
+  const targetCA = v('targetCA');
+
+  // ── Scoring ──────────────────────────────────────
+  let score = 100;
+  const recs = { critical: [], warning: [], ok: [] };
+
+  // Finances
+  const marginRate = ca > 0 ? (net / ca) * 100 : null;
+  const ebitdaRate = ca > 0 ? (ebitda / ca) * 100 : null;
+  const debtRatio  = ebitda > 0 ? debt / ebitda : null;
+
+  if (marginRate !== null) {
+    if (marginRate < 0)    { score -= 25; recs.critical.push('⚠️ Résultat net négatif (' + marginRate.toFixed(1) + '%) : l\'entreprise perd de l\'argent. Revue urgente des charges et du pricing.'); }
+    else if (marginRate < 3) { score -= 12; recs.warning.push('📉 Marge nette très faible (' + marginRate.toFixed(1) + '%) : vulnérabilité aux aléas. Objectif cible : ≥ 5 %.'); }
+    else { recs.ok.push('✅ Marge nette de ' + marginRate.toFixed(1) + '% : rentabilité satisfaisante.'); }
+  }
+  if (ebitdaRate !== null) {
+    if (ebitdaRate < 5) { score -= 10; recs.warning.push('📊 EBE/EBITDA bas (' + ebitdaRate.toFixed(1) + '% du CA). Revoir les achats et l\'optimisation opérationnelle.'); }
+    else { recs.ok.push('✅ EBE de ' + ebitdaRate.toFixed(1) + '% — bonne génération de cash opérationnel.'); }
+  }
+  if (caTrend < -10) { score -= 15; recs.critical.push('📉 Baisse du CA de ' + Math.abs(caTrend) + '% : perte de marché significative. Analyser les causes (prix, concurrence, offre).'); }
+  else if (caTrend < 0) { score -= 7; recs.warning.push('⬇️ Légère baisse du CA (' + caTrend + '%). Surveiller la tendance et renforcer l\'acquisition client.'); }
+  else if (caTrend > 10) { recs.ok.push('🚀 Croissance du CA de +' + caTrend + '% — dynamique positive.'); }
+
+  // Trésorerie
+  if (cash > 0 && ca > 0) {
+    const cashMonths = cash / (ca / 12);
+    if (cashMonths < 1) { score -= 20; recs.critical.push('🔴 Trésorerie critique (< 1 mois de CA). Ouvrir une ligne de crédit court terme et accélérer les encaissements.'); }
+    else if (cashMonths < 2) { score -= 8; recs.warning.push('🟠 Trésorerie tendue (environ ' + cashMonths.toFixed(1) + ' mois). Anticiper les décalages de paiement.'); }
+    else { recs.ok.push('✅ Trésorerie couvrant ~' + cashMonths.toFixed(1) + ' mois de CA.'); }
+  }
+  if (debtRatio !== null && debtRatio > 3) { score -= 10; recs.warning.push('💳 Endettement élevé (ratio dette/EBE = ' + debtRatio.toFixed(1) + 'x). Priorité au désendettement.'); }
+  if (dso > 60) { score -= 8; recs.warning.push('⏱ DSO élevé (' + dso + ' jours) : risque de tension cash. Mettre en place des relances automatisées.'); }
+
+  // Digital
+  const digitalScore = digital.length;
+  if (digitalScore < 2) { score -= 12; recs.critical.push('💻 Présence digitale quasi-inexistante (' + digitalScore + '/8 outils). Créer a minima un site et une fiche Google Maps.'); }
+  else if (digitalScore < 5) { score -= 5; recs.warning.push('🌐 Présence digitale partielle (' + digitalScore + '/8). Compléter avec SEO, CRM et newsletter.'); }
+  else { recs.ok.push('✅ Bonne présence digitale (' + digitalScore + '/8 outils actifs).'); }
+
+  const socialScore = social.length;
+  if (socialScore === 0) { score -= 8; recs.warning.push('📱 Aucun réseau social actif. Choisir 1–2 plateformes cohérentes avec votre cible et publier régulièrement.'); }
+  else if (pubFreq === 'none') { score -= 5; recs.warning.push('📅 Réseaux présents mais publication irrégulière : l\'algorithme pénalise l\'inactivité.'); }
+  else { recs.ok.push('✅ ' + socialScore + ' réseau(x) actif(s) avec une publication ' + pubFreq + '.'); }
+
+  // Fournisseurs
+  if (suppConc > 70) { score -= 12; recs.critical.push('⚠️ Concentration fournisseur critique (' + suppConc + '% chez un seul). Diversifier immédiatement pour réduire le risque opérationnel.'); }
+  else if (suppConc > 50) { score -= 6; recs.warning.push('🔶 Fournisseur dominant (' + suppConc + '%). Identifier et qualifier des alternatives.'); }
+  if (suppRisks.includes('single_source')) { score -= 8; recs.critical.push('🔴 Mono-fournisseur identifié : la moindre défaillance de ce fournisseur peut bloquer votre activité.'); }
+  if (suppRisks.includes('no_contract')) { score -= 6; recs.warning.push('📝 Absence de contrats formalisés : exposition juridique et commerciale. Régulariser rapidement.'); }
+  if (suppIncidents > 10) { score -= 5; recs.warning.push('⚡ Taux d\'incidents fournisseur élevé (' + suppIncidents + '%). Auditer la qualité et définir des SLA.'); }
+
+  // Clients
+  if (clientConc > 50) { score -= 15; recs.critical.push('🚨 Concentration client critique : ' + clientConc + '% du CA chez un seul client. La perte de ce compte serait fatale. Diversifier en urgence.'); }
+  else if (clientConc > 30) { score -= 7; recs.warning.push('🔶 Client dominant (' + clientConc + '% du CA). Renforcer les autres segments.'); }
+  if (retention < 60) { score -= 10; recs.critical.push('📉 Taux de rétention bas (' + retention + '%). Coût d\'acquisition x5 par rapport à la fidélisation. Mettre en place un programme loyalty.'); }
+  else if (retention < 75) { score -= 4; recs.warning.push('🔸 Rétention clients à améliorer (' + retention + '%). Objectif : ≥ 80 % selon le secteur.'); }
+  else { recs.ok.push('✅ Rétention client solide (' + retention + '%).'); }
+  if (nps > 0 && nps < 6) { score -= 8; recs.critical.push('😟 NPS/Satisfaction faible (' + nps + '/10). Risque de bouche-à-oreille négatif. Enquête client urgente.'); }
+  else if (nps >= 8) { recs.ok.push('⭐ Excellent NPS (' + nps + '/10) — actif commercial fort.'); }
+
+  score = Math.max(0, Math.min(100, score));
+
+  // ── Score color ─────────────────────────────────
+  let scoreColor = score > 75 ? '#69F0AE' : score > 50 ? '#FFB74D' : '#FF5370';
+  let scoreLabel = score > 75 ? 'Bonne santé' : score > 50 ? 'Vigilance' : 'Alerte';
+
+  // ── Growth gap ───────────────────────────────────
+  let caGrowthNeeded = targetCA > 0 && ca > 0 ? ((targetCA - ca) / ca * 100).toFixed(1) : null;
+
+  // ── Action plan ──────────────────────────────────
+  const actions = [];
+  if (recs.critical.length > 0) {
+    if (marginRate !== null && marginRate < 0) actions.push({ name: 'Audit de rentabilité immédiat', desc: 'Identifier les lignes de charges anormales, renégocier les contrats, ajuster les prix de vente. Faire appel à un expert-comptable.', delay: 'urgent' });
+    if (clientConc > 50) actions.push({ name: 'Diversification clients urgente', desc: 'Lancer une campagne de prospection active sur 3 nouveaux segments. Objectif : réduire la concentration à < 30% en 6 mois.', delay: 'urgent' });
+    if (cash > 0 && ca > 0 && (cash / (ca / 12)) < 1) actions.push({ name: 'Sécuriser la trésorerie', desc: 'Contacter votre banque pour une ligne de crédit court terme. Accélérer les relances clients. Demander des acomptes.', delay: 'urgent' });
+    if (suppConc > 70 || suppRisks.includes('single_source')) actions.push({ name: 'Plan de diversification fournisseurs', desc: 'Identifier et qualifier 2–3 fournisseurs alternatifs dans les 30 jours. Négocier des conditions préférentielles.', delay: 'urgent' });
+  }
+  if (digital.length < 3) actions.push({ name: 'Création d\'une présence digitale minimale', desc: 'Site web vitrine, fiche Google My Business optimisée, page LinkedIn. Budget estimé : 1 500 à 4 000 €.', delay: 'month' });
+  if (!digital.includes('crm')) actions.push({ name: 'Déploiement d\'un CRM', desc: 'Centraliser la base clients, automatiser les relances, suivre le pipeline commercial. Solutions : HubSpot Free, Pipedrive.', delay: 'month' });
+  if (dso > 45) actions.push({ name: 'Optimisation du recouvrement clients', desc: 'Mettre en place des relances automatisées à J+15, J+30, J+45. Proposer un escompte de 1–2% pour paiement anticipé.', delay: 'month' });
+  if (retention < 75) actions.push({ name: 'Programme de fidélisation clients', desc: 'Email de suivi post-achat, enquête satisfaction, offre anniversaire. Augmenter la LTV de chaque client existant.', delay: 'month' });
+  actions.push({ name: 'Tableau de bord de pilotage mensuel', desc: 'Mettre en place un reporting mensuel : CA, marge, trésorerie, NPS, taux de rétention. Décisions basées sur la data.', delay: 'long' });
+  actions.push({ name: 'Stratégie de montée en gamme', desc: 'Analyser la possibilité d\'augmenter le panier moyen via des offres premium, upsell et cross-sell.', delay: 'long' });
+
+  // ── HTML ──────────────────────────────────────────
+  const html = `
+    <div class="report-header">
+      <div class="ia-badge">🧠 Rapport IA Généré</div>
+      <h1>Diagnostic — ${company}</h1>
+      <p>${sector} · Analysé le ${new Date().toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' })}</p>
+      <div class="score-ring" style="background: conic-gradient(${scoreColor} ${score}%, #2E3250 ${score}%);">
+        <span style="color:${scoreColor}; font-size:1.8rem; font-weight:900">${score}</span>
+        <span class="score-label">${scoreLabel}</span>
+      </div>
+      <p style="color:var(--muted); font-size:.85rem">Score de santé globale / 100</p>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-val" style="color:var(--primary)">${ca > 0 ? formatEuro(ca) : '—'}</div>
+        <div class="kpi-lbl">Chiffre d'affaires</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-val" style="color:${net >= 0 ? 'var(--success)' : 'var(--danger)'}">${net !== 0 ? formatEuro(net) : '—'}</div>
+        <div class="kpi-lbl">Résultat net</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-val" style="color:var(--warn)">${marginRate !== null ? marginRate.toFixed(1) + '%' : '—'}</div>
+        <div class="kpi-lbl">Marge nette</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-val" style="color:var(--secondary)">${cash > 0 ? formatEuro(cash) : '—'}</div>
+        <div class="kpi-lbl">Trésorerie</div>
+      </div>
+    </div>
+
+    <div class="diag-grid">
+      <div class="diag-card">
+        <div class="diag-title">🚨 Points Critiques</div>
+        ${recs.critical.length > 0 ? recs.critical.map(r => `<div class="rec-item critical"><span class="rec-icon">🔴</span><span>${r}</span></div>`).join('') : '<div class="rec-item ok"><span class="rec-icon">✅</span><span>Aucun point critique majeur détecté.</span></div>'}
+      </div>
+      <div class="diag-card">
+        <div class="diag-title">⚠️ Points de Vigilance</div>
+        ${recs.warning.length > 0 ? recs.warning.map(r => `<div class="rec-item warning"><span class="rec-icon">🟠</span><span>${r}</span></div>`).join('') : '<div class="rec-item ok"><span class="rec-icon">✅</span><span>Aucun point de vigilance particulier.</span></div>'}
+      </div>
+    </div>
+
+    <div class="diag-card" style="margin-top:1.5rem">
+      <div class="diag-title">✅ Points Positifs</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:.6rem">
+        ${recs.ok.length > 0 ? recs.ok.map(r => `<div class="rec-item ok"><span class="rec-icon">🟢</span><span>${r}</span></div>`).join('') : '<div class="rec-item warning" style="grid-column:1/-1"><span>Peu d\'indicateurs positifs clairement identifiés — les données saisies sont incomplètes ou des marges de progression existent partout.</span></div>'}
+      </div>
+    </div>
+
+    <div class="diag-card" style="margin-top:1.5rem">
+      <div class="diag-title">📊 Indicateurs Clés</div>
+      ${buildMetricBar('Santé financière', score > 70 ? 80 : score > 50 ? 55 : 30, 'var(--primary)')}
+      ${buildMetricBar('Présence digitale', Math.round((digital.length / 8) * 100), 'var(--secondary)')}
+      ${buildMetricBar('Fidélisation clients', retention || 50, 'var(--warn)')}
+      ${buildMetricBar('Diversification fournisseurs', suppConc > 0 ? Math.max(10, 100 - suppConc) : 60, '#9C56FF')}
+      ${buildMetricBar('Activité réseaux sociaux', social.length > 0 ? (pubFreq === 'daily' ? 90 : pubFreq === 'weekly' ? 65 : pubFreq === 'monthly' ? 40 : 20) : 5, '#FF5370')}
+    </div>
+
+    ${caGrowthNeeded !== null ? `
+    <div class="diag-card" style="margin-top:1.5rem">
+      <div class="diag-title">🎯 Objectif de Croissance</div>
+      <p style="font-size:.9rem; color:var(--muted); margin-bottom:1rem">Pour atteindre votre objectif N+1 de <strong style="color:var(--text)">${formatEuro(targetCA)}</strong>, il faut générer <strong style="color:var(--primary)">+${caGrowthNeeded}%</strong> de croissance.</p>
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; font-size:.85rem">
+        <div style="background:var(--card2); padding:12px; border-radius:10px; text-align:center">
+          <div style="font-size:1.2rem; font-weight:800; color:var(--primary)">${ca > 0 ? Math.ceil((targetCA - ca) / (ca / 12)) : '—'} mois</div>
+          <div style="color:var(--muted)">à maintenir la tendance</div>
+        </div>
+        <div style="background:var(--card2); padding:12px; border-radius:10px; text-align:center">
+          <div style="font-size:1.2rem; font-weight:800; color:var(--secondary)">${ca > 0 ? formatEuro((targetCA - ca) / 12) : '—'}</div>
+          <div style="color:var(--muted)">de CA supplémentaire / mois</div>
+        </div>
+        <div style="background:var(--card2); padding:12px; border-radius:10px; text-align:center">
+          <div style="font-size:1.2rem; font-weight:800; color:var(--warn)">${v('avgBasket') > 0 ? Math.ceil((targetCA - ca) / 12 / v('avgBasket')) : '—'} clients</div>
+          <div style="color:var(--muted)">nouveaux clients / mois</div>
+        </div>
+      </div>
+    </div>` : ''}
+
+    <div class="action-plan">
+      <div class="action-title">🗺️ Plan d'Action Personnalisé IA</div>
+      ${actions.slice(0, 8).map((a, i) => `
+        <div class="action-item">
+          <div class="action-num">${i + 1}</div>
+          <div class="action-content">
+            <div class="action-name">${a.name}</div>
+            <div class="action-desc">${a.desc}</div>
+          </div>
+          <div class="action-delay ${a.delay === 'urgent' ? 'delay-urgent' : a.delay === 'month' ? 'delay-month' : 'delay-long'}">
+            ${a.delay === 'urgent' ? '🔴 < 1 mois' : a.delay === 'month' ? '🟠 1–3 mois' : '🟢 3–6 mois'}
+          </div>
+        </div>`).join('')}
+    </div>
+
+    <div style="margin-top:2rem">
+      <h2 style="font-size:1.1rem; font-weight:800; margin-bottom:1.5rem; display:flex; align-items:center; gap:.5rem">
+        🤖 Packs IA — Accélérez votre transformation
+      </h2>
+      <div class="pack-grid">
+        <div class="pack-card">
+          <div class="pack-name">Starter</div>
+          <div class="pack-price">149 € <span>/ mois</span></div>
+          <div class="pack-feat">
+            <strong>✅ Diagnostic mensuel automatisé</strong>
+            <strong>✅ Tableau de bord KPI</strong>
+            <strong>✅ Alertes trésorerie</strong>
+            <strong>✅ Rapport PDF exportable</strong>
+            <strong>📧 Support email 5j/7</strong>
+          </div>
+          <button class="btn-pack">Choisir Starter</button>
+        </div>
+        <div class="pack-card featured">
+          <div style="font-size:.7rem; color:var(--primary); font-weight:800; margin-bottom:.5rem">⭐ RECOMMANDÉ</div>
+          <div class="pack-name">Business IA</div>
+          <div class="pack-price">349 € <span>/ mois</span></div>
+          <div class="pack-feat">
+            <strong>✅ Tout Starter +</strong>
+            <strong>✅ Assistant IA 24/7 (chatbot)</strong>
+            <strong>✅ Analyse fournisseurs & clients</strong>
+            <strong>✅ Prévisions de trésorerie</strong>
+            <strong>✅ Benchmarks sectoriels</strong>
+            <strong>📞 Support téléphonique</strong>
+          </div>
+          <button class="btn-pack">Choisir Business IA</button>
+        </div>
+        <div class="pack-card">
+          <div class="pack-name">Enterprise</div>
+          <div class="pack-price">Sur devis</div>
+          <div class="pack-feat">
+            <strong>✅ Tout Business IA +</strong>
+            <strong>✅ Intégration ERP / compta</strong>
+            <strong>✅ IA prédictive personnalisée</strong>
+            <strong>✅ Consultant dédié</strong>
+            <strong>✅ Formation équipe</strong>
+            <strong>🏆 SLA garanti 99,9%</strong>
+          </div>
+          <button class="btn-pack">Demander un devis</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-buttons" style="margin-top:2rem; padding-bottom:3rem">
+      <button class="btn btn-secondary" onclick="document.getElementById('reportSection').classList.remove('show'); document.getElementById('mainApp').style.display=''; document.getElementById('printBtn').style.display='none'; goStep(4);">← Modifier les données</button>
+      <button class="btn btn-primary" onclick="window.print()">🖨 Imprimer le rapport</button>
+    </div>
+  `;
+
+  document.getElementById('reportContent').innerHTML = html;
+  document.getElementById('mainApp').style.display = 'none';
+  document.getElementById('reportSection').classList.add('show');
+  document.getElementById('printBtn').style.display = 'flex';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  // animate bars
+  setTimeout(() => {
+    document.querySelectorAll('.metric-bar-fill').forEach(bar => {
+      bar.style.width = bar.dataset.target;
+    });
+  }, 200);
+}
+
+function buildMetricBar(label, pct, color) {
+  pct = Math.max(0, Math.min(100, pct || 0));
+  return `<div class="metric-bar-wrap">
+    <div class="metric-bar-label"><span>${label}</span><span>${pct}%</span></div>
+    <div class="metric-bar"><div class="metric-bar-fill" data-target="${pct}%" style="width:0%; background:${color}"></div></div>
+  </div>`;
+}
+
+function formatEuro(n) {
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n);
+}
+</script>
+</body>
+</html>
